@@ -170,7 +170,7 @@ func (m *meta) magicFunc() {
 
 func (m *meta) sum64() uint64 {
 	var h = fnv.New64a()
-	_, _ = h.Write(  [unsafe.Offsetof(meta{}.checksum)]byte)  unsafe.Pointer(m))
+	_, _ = h.Write( [unsafe.Offsetof(meta{}.checksum)]byte)unsafe.Pointer(m))
 	return h.Sum64()
 }
 
@@ -182,6 +182,5 @@ func (m *meta) validate() error {
 	} else if m.checksum != 0 && m.checksum != m.sum64() {
 		return ErrChecksum
 	}
-
 	return nil
 }
