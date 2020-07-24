@@ -1,22 +1,18 @@
 package _146
 
 // 1. 移除的时候别忘了从map中移除
-// 2. tail节点更新的时候
-// 3. head节点更新
 
 type LRUCache struct {
 	maps map[int]*node
-
-	head *node
-	tail *node
-	size int
-	cap  int
+	// 双向链表
+	*doubleLinked
 }
 
 func Constructor(capacity int) LRUCache {
 	return LRUCache{make(map[int]*node), newDoubleLinked(capacity)}
 }
 
+// 构造Fake的头尾节点
 // 最新的在头部, 最久的在尾部.
 type doubleLinked struct {
 	head *node
@@ -26,7 +22,12 @@ type doubleLinked struct {
 }
 
 func newDoubleLinked(capacity int) *doubleLinked {
-	return &doubleLinked{cap: capacity}
+	//开始构造2个, 好像就不用判断长度了
+	head := &node{}
+	tail := &node{}
+	head.next = tail
+	tail.prev = head
+	return &doubleLinked{head: head, tail: tail, size: 0, cap: capacity}
 }
 
 func (self *doubleLinked) isFull() bool {
@@ -55,44 +56,28 @@ func (self *doubleLinked) updateNode(n *node) {
 }
 
 // 插入node
-func (self *doubleLinked) insertNode(n *node, maps map[int]*node) {
-	if self.size == 0 {
-		self.head = n
-		self.tail = n
-		self.head.next = self.tail
-		self.tail.prev = self.head
+func (self *doubleLinked) insertNode(n *node) {
+	head := self.head
+	h := head.next
 
-		//更新大小
-		self.size++
-	} else if self.isFull() {
-		//所以当移除的时候,去掉尾部的数据
-		// 更新整体指针
-		//移除尾部
-		// 只有1个满的时候, 直接清空
+	n.next = h
+	h.prev = n
 
-		delete(maps, self.tail.key)
-		self.size--
+	// 链接新头
+	head.next = n
+	n.prev = head
 
-		if self.size == 1 {
-			self.head = nil
-			self.tail = nil
-		} else {
-			prev := self.tail.prev
-			prev.next = nil
-			self.tail = prev
-		}
-
-		self.insertNode(n, maps)
-	} else {
-		self.insertHead(n)
-
-		//更新大小
-		self.size++
-	}
+	//更新大小
+	self.size++
 }
 
-func (self *doubleLinked) removeTail() {
+// 移除尾部
+func (self *doubleLinked) removeNode(n *node) bool {
+	if (self.size == 0) {
+		return false
+	}
 
+	return true
 }
 
 func (self *doubleLinked) insertHead(n *node) {
@@ -127,7 +112,7 @@ func (this *LRUCache) Put(key int, value int) {
 	n := this.maps[key]
 	if n == nil {
 		newNode := newNode(key, value)
-		this.insertNode(newNode, this.maps)
+		this.insertNode(newNode)
 
 		this.maps[key] = newNode
 	} else {
