@@ -12,6 +12,22 @@ func Constructor(capacity int) LRUCache {
 	return LRUCache{make(map[int]*node), newDoubleLinked(capacity)}
 }
 
+type oc interface {
+	doOcLogic(n *node)
+}
+
+type ic interface {
+	doIcLogic(n *node)
+}
+
+func (self *LRUCache) doOcLogic(n *node) {
+	delete(self.maps, n.key)
+}
+
+func (self *LRUCache) doIcLogic(n *node) {
+	self.maps[n.key] = n
+}
+
 // 构造Fake的头尾节点
 // 最新的在头部, 最久的在尾部.
 type doubleLinked struct {
@@ -35,56 +51,61 @@ func (self *doubleLinked) isFull() bool {
 }
 
 // 更新node
-func (self *doubleLinked) updateNode(n *node) {
-	if self.size > 1 {
-		prev := n.prev
-		next := n.next
-		if prev != nil {
-			prev.next = next
-		}
-
-		if next != nil {
-			next.prev = prev
-		}
-
-		self.insertHead(n)
-
-		if n == self.tail {
-			self.tail = prev
-		}
+func (self *doubleLinked) updateNode(n *node, oc oc, ic ic) {
+	if n != nil {
+		self.removeNode(n, oc)
+		self.insertHead(n, oc, ic)
 	}
 }
 
-// 插入node
-func (self *doubleLinked) insertNode(n *node) {
-	head := self.head
-	h := head.next
+// 插入一个节点
+func (self *doubleLinked) insertNode(prev, n *node, oc oc, ic ic) {
+	if n == nil || prev == nil {
+		return
+	}
 
-	n.next = h
-	h.prev = n
+	if self.isFull() {
+		self.removeTail(oc)
+	}
 
-	// 链接新头
-	head.next = n
-	n.prev = head
+	next := prev.next
 
-	//更新大小
+	// 链接n和next
+	n.next = next
+	next.prev = n
+
+	// 链接n和prev
+	prev.next = n
+	n.prev = prev
+
 	self.size++
+
+	ic.doIcLogic(n)
 }
 
-// 移除尾部
-func (self *doubleLinked) removeNode(n *node) bool {
-	if (self.size == 0) {
-		return false
+// 插入一个node到头部
+func (self *doubleLinked) insertHead(n *node, oc oc, ic ic) {
+	self.insertNode(self.head, n, oc, ic)
+}
+
+// 移除一个节点
+func (self *doubleLinked) removeNode(n *node, ic oc) {
+	if self.size == 0 {
+		return
 	}
 
-	return true
+	prev, next := n.prev, n.next
+	prev.next = next
+	next.prev = prev
+
+	self.size--
+
+	ic.doOcLogic(n)
 }
 
-func (self *doubleLinked) insertHead(n *node) {
-	n.prev = nil
-	n.next = self.head
-	self.head.prev = n
-	self.head = n
+// 从尾部移除一个节点
+func (self *doubleLinked) removeTail(ic oc) {
+	self.removeNode(self.tail.prev, ic)
 }
 
 type node struct {
@@ -103,7 +124,7 @@ func (this *LRUCache) Get(key int) int {
 	if n == nil {
 		return -1
 	} else {
-		this.updateNode(n)
+		this.updateNode(n, this, this)
 		return n.value
 	}
 }
@@ -112,11 +133,10 @@ func (this *LRUCache) Put(key int, value int) {
 	n := this.maps[key]
 	if n == nil {
 		newNode := newNode(key, value)
-		this.insertNode(newNode)
-
+		this.insertHead(newNode, this, this)
 		this.maps[key] = newNode
 	} else {
 		n.value = value
-		this.updateNode(n)
+		this.updateNode(n, this, this)
 	}
 }
