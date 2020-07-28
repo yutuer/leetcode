@@ -23,7 +23,7 @@ func (this *AllOne) Inc(key string) {
 	// 查找
 	n, exists := this.maps[key]
 	if exists {
-		this.doubleLinkedList.add(n)
+		this.doubleLinkedList.add(n, key)
 	} else {
 		this.doubleLinkedList.put(key)
 	}
@@ -34,7 +34,7 @@ func (this *AllOne) Dec(key string) {
 	// 查找
 	n, exists := this.maps[key]
 	if exists {
-		this.doubleLinkedList.sub(n)
+		this.doubleLinkedList.sub(n, key)
 	}
 }
 
@@ -71,39 +71,85 @@ type doubleLinkedList struct {
 }
 
 func newDoubleLinkedList() *doubleLinkedList {
-	head, tail := newNode(), newNode()
+	head, tail := newNode(0, ""), newNode(0, "")
 	head.next = tail
 	tail.prev = head
 	return &doubleLinkedList{head, tail, 0}
 }
 
-// 链表节点
-type node struct {
-	count      int             //计数
-	datas      map[string]byte //拥有的元素
-	prev, next *node
-}
-
-func newNode() *node {
-	return &node{count: 0, datas: make(map[string]byte), prev: nil, next: nil}
-}
-
 // 存储一个值, 放到第一个位置
 func (this *doubleLinkedList) put(key string) {
+	// 判断第一个node 是不是 值为1的, 如果不是, 插入一个新生成的node
+	next := this.head.next;
+	if next.value != 1 {
+		n := newNode(1, key)
+		this.insertHead(n)
+	} else {
+		//把n的值放入 node
+		next.insertKey(key)
+	}
+}
 
+func (this *doubleLinkedList) insertHead(n *node) {
+	this.insertNode(this.head, n)
+}
+
+func (this *doubleLinkedList) insertNode(prev, n *node) {
+	next := prev.next
+
+	// 链接 head.next 和 n
+	n.next = next
+	next.prev = n
+
+	// 链接head和n
+
+	this.head.next = n
+	n.prev = this.head
 }
 
 // 删除一个值
 func (this *doubleLinkedList) remove(key string) {
-
+	
 }
 
 // 将n中的值减去1
-func (this *doubleLinkedList) sub(n *node) {
+func (this *doubleLinkedList) sub(n *node, key string) {
 
 }
 
 // 将n的值加上1
-func (this *doubleLinkedList) add(n *node) {
+func (this *doubleLinkedList) add(n *node, key string) {
+	//一定在map中
+	next := n.next
 
+	// 如果后面的节点是+1的, 那么从n中移除key, 放入到后面, 否则生成新节点, 插入n的后面
+	n.deleteKey(key)
+	if next.value == n.value+1 {
+		next.insertKey(key)
+	} else {
+		newNode := newNode(n.value+1, key)
+		this.insertNode(n, newNode)
+	}
+
+}
+
+// 链表节点
+type node struct {
+	value      int             //计数
+	datas      map[string]byte //拥有的元素
+	prev, next *node
+}
+
+func newNode(value int, key string) *node {
+	maps := make(map[string]byte)
+	maps[key] = '1'
+
+	return &node{value: value, datas: maps, prev: nil, next: nil}
+}
+
+func (this *node) insertKey(key string) {
+	this.datas[key] = '1'
+}
+func (this *node) deleteKey(key string) {
+	delete(this.datas, key)
 }
