@@ -5,12 +5,12 @@ type AllOne struct {
 	*doubleLinkedList
 }
 
-type oc interface {
-	ocLogic()
+type uc interface {
+	ucLogic(key string, n *node)
 }
 
-type ic interface {
-	icLogic()
+func (this *AllOne) ucLogic(key string, n *node) {
+	this.maps[key] = n
 }
 
 /** Initialize your data structure here. */
@@ -23,7 +23,7 @@ func (this *AllOne) Inc(key string) {
 	// 查找
 	n, exists := this.maps[key]
 	if exists {
-		this.doubleLinkedList.add(n, key)
+		this.doubleLinkedList.add(n, key, this)
 	} else {
 		this.doubleLinkedList.put(key)
 	}
@@ -109,7 +109,7 @@ func (this *doubleLinkedList) insertNode(prev, n *node) {
 
 // 删除一个值
 func (this *doubleLinkedList) remove(key string) {
-	
+
 }
 
 // 将n中的值减去1
@@ -118,11 +118,12 @@ func (this *doubleLinkedList) sub(n *node, key string) {
 }
 
 // 将n的值加上1
-func (this *doubleLinkedList) add(n *node, key string) {
+func (this *doubleLinkedList) add(n *node, key string, uc uc) {
 	//一定在map中
 	next := n.next
 
-	// 如果后面的节点是+1的, 那么从n中移除key, 放入到后面, 否则生成新节点, 插入n的后面
+	// 如果后面的节点是+1的, 那么从n中移除key, 放入到后面, 此节点先不删除
+	// 否则 判断下是否只有自己, 如果是则只需要换掉值.  如果还有别人, 则生成新节点, 插入n的后面
 	n.deleteKey(key)
 	if next.value == n.value+1 {
 		next.insertKey(key)
