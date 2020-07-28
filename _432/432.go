@@ -88,7 +88,7 @@ func newNode() *node {
 	return &node{count: 0, datas: make(map[string]byte), prev: nil, next: nil}
 }
 
-// 存储一个值
+// 存储一个值, 放到第一个位置
 func (this *doubleLinkedList) put(key string) {
 
 }
@@ -98,10 +98,12 @@ func (this *doubleLinkedList) remove(key string) {
 
 }
 
+// 将n中的值减去1
 func (this *doubleLinkedList) sub(n *node) {
 
 }
 
+// 将n的值加上1
 func (this *doubleLinkedList) add(n *node) {
 
 }
