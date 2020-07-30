@@ -115,16 +115,29 @@ func (this *doubleLinkedList) inc(n *node, key string, uc uc) {
 
 	// 如果后面的节点是+1的, 那么从n中移除key, 放入到后面, 此节点先不删除
 	// 否则 判断下是否只有自己, 如果是则只需要换掉值.  如果还有别人, 则生成新节点, 插入n的后面
-	n.deleteKey(key)
 	if next.value == n.value+1 {
+		n.deleteKey(key)
+		if len(n.datas) == 0 {
+			// 移除掉n
+			this.removeNode(n)
+		}
+
+		// 插入到下一个节点中
 		next.insertKey(key)
 
 		uc.ucLogic(key, next)
 	} else {
-		newNode := newNode(n.value+1, key)
-		this.insertNode(n, newNode)
+		if len(n.datas) == 1 {
+			// 可以直接将n的value+1
+			n.value = n.value + 1
+		} else {
+			n.deleteKey(key)
 
-		uc.ucLogic(key, newNode)
+			newNode := newNode(n.value+1, key)
+			this.insertNode(n, newNode)
+
+			uc.ucLogic(key, newNode)
+		}
 	}
 }
 
@@ -144,6 +157,14 @@ func (this *doubleLinkedList) insertNode(prev, n *node) {
 	n.prev = prev
 }
 
+func (this *doubleLinkedList) removeNode(n *node) {
+	prev := n.prev
+	next := n.next
+
+	prev.next = next
+	next.prev = prev
+}
+
 // 删除一个值
 func (this *doubleLinkedList) remove(key string) {
 
@@ -154,24 +175,37 @@ func (this *doubleLinkedList) dec(n *node, key string, rc rc, uc uc) {
 	prev := n.prev
 
 	// 如果prev存在, 则插入并更新. 否则插入节点
-	prev.deleteKey(key)
 	if n.value == 1 {
+		n.deleteKey(key)
+
+		if len(n.datas) == 0 {
+			this.removeNode(n)
+		}
+
 		this.size--
 	} else {
 		if prev.value == n.value-1 {
 			prev.insertKey(key)
 
+			n.deleteKey(key)
+
+			if len(n.datas) == 0 {
+				this.removeNode(n)
+			}
+
 			uc.ucLogic(key, prev)
 		} else {
-			newNode := newNode(n.value-1, key)
-			this.insertNode(n, newNode)
+			if len(n.datas) == 1 {
+				// 直接将n值-1
+				n.value = n.value - 1
+			} else {
+				newNode := newNode(n.value-1, key)
+				this.insertNode(n, newNode)
 
-			uc.ucLogic(key, newNode)
-
-			// 如果这里不清除节点, 则找最小值, 或者最大值, 必须遍历到首个map不为空的节点才能找到了
+				uc.ucLogic(key, newNode)
+			}
 		}
 	}
-
 }
 
 // 链表节点
