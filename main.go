@@ -1,15 +1,14 @@
 package main
 
 import "fmt"
-import "github.com/yutuer/mydatastruct/stack"
+
+const(
+	i = 3
+	a byte = 100
+	b int = 1e20  // constant 100000000000000000000 overflows int
+)
 
 func main() {
 	fmt.Println("test")
-
-	myStack := stack.NewStack()
-	myStack.Push(1)
-
-	i, _ := myStack.Pop()
-
-	fmt.Println(i)
+	fmt.Println(i, a, b)
 }
